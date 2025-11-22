@@ -33,7 +33,7 @@ const UserProfileInfo = ({ user, posts, profileId, setShowEdit }) => {
             {!profileId && (
               <button
                 onClick={() => setShowEdit(true)}
-                className="flex items-center gap-2 border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg font-medium transition-colors mt-4 md:mt-0"
+                className="flex items-center gap-2 border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg font-medium transition-colors mt-4 md:mt-0 cursor-pointer"
               >
                 <PenBox className="w-4 h-4" />
                 Редактировать
@@ -54,6 +54,32 @@ const UserProfileInfo = ({ user, posts, profileId, setShowEdit }) => {
                 {moment(user.createdAt).fromNow()}
               </span>
             </span>
+          </div>
+          <div className="flex items-center gap-6 mt-6 boder-t border-gray-200 pt-4">
+            <div>
+              <span className="sm:text-xl font-bold text-gray-900">
+                {posts.length}
+              </span>
+              <span className="text-xs sm:text-sm text-gray-500 ml-1.5">
+                Публикации
+              </span>
+            </div>
+            <div>
+              <span className="sm:text-xl font-bold text-gray-900">
+                {user.followers.length}
+              </span>
+              <span className="text-xs sm:text-sm text-gray-500 ml-1.5">
+                Подписчики
+              </span>
+            </div>
+            <div>
+              <span className="sm:text-xl font-bold text-gray-900">
+                {user.following.length}
+              </span>
+              <span className="text-xs sm:text-sm text-gray-500 ml-1.5">
+                Подписки
+              </span>
+            </div>
           </div>
         </div>
       </div>
