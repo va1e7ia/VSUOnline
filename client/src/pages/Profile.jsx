@@ -5,6 +5,7 @@ import Loading from "../components/Loading";
 import PostCard from "../components/PostCard";
 import UserProfileInfo from "../components/UserProfileInfo";
 import moment from "moment/min/moment-with-locales";
+import ProfileModal from "../components/ProfileModal";
 
 moment.locale("ru");
 
@@ -12,7 +13,7 @@ const Profile = () => {
   const { profileId } = useParams();
   const [user, setUser] = useState(null);
   const [posts, setPosts] = useState([]);
-  const [activeTab, setActiveTab] = useState("posts");
+  const [activeTab, setActiveTab] = useState("Публикации");
   const [showEdit, setShowEdit] = useState(false);
 
   const fetchUser = async () => {
@@ -103,8 +104,8 @@ const Profile = () => {
           )}
         </div>
       </div>
-      {/* Edit Profile Modsl */}
-      {showEdit && <p>Отредактировать профиль</p>}
+      {/* Edit Profile Modal */}
+      {showEdit && <ProfileModal setShowEdit={setShowEdit} />}
     </div>
   ) : (
     <Loading />
