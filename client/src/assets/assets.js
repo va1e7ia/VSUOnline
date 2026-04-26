@@ -1,7 +1,9 @@
-import logo from "./logo.svg";
+import logo from "./logo.png";
 import sample_cover from "./sample_cover.jpg";
-import sample_profile from "./sample_profile.jpg";
-import bgImage from "./bgImage.png";
+import sample_profile from "./sample_profile.png";
+import milena from "./milena.png";
+import katya from "./katya.jpg";
+import bgImage from "./background.png";
 import group_users from "./group_users.png";
 import { Home, MessageCircle, Search, UserIcon, Users } from "lucide-react";
 import sponsored_img from "./sponsored_img.png";
@@ -13,6 +15,8 @@ export const assets = {
   bgImage,
   group_users,
   sponsored_img,
+  milena,
+  katya,
 };
 
 export const menuItemsData = [
@@ -28,10 +32,10 @@ export const dummyUserData = {
   email: "admin@example.com",
   full_name: "Михалевич Валерия",
   username: "mihalevich_valeria",
-  bio: "🌍 Dreamer | 📚 Learner | 🚀 Doer\r\nExploring life one step at a time.\r\n✨ Staying curious. Creating with purpose.",
+  bio: "4 курс, ФМиИТ, 22ПИ_ВЕБ1д\r\n✨CEO VSUniverse",
   profile_picture: sample_profile,
   cover_photo: sample_cover,
-  location: "New York, NY",
+  location: "Витебск",
   followers: ["user_2", "user_3"],
   following: ["user_2", "user_3"],
   connections: ["user_2", "user_3"],
@@ -44,19 +48,19 @@ export const dummyUserData = {
 const dummyUser2Data = {
   ...dummyUserData,
   _id: "user_2",
-  username: "Richard Hendricks",
-  full_name: "Richard Hendricks",
-  profile_picture:
-    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200",
+  username: "bratishko_milena",
+  full_name: "Братишко Милена",
+  profile_picture: milena,
+  bio: "4 курс, ФМиИТ, 22ПИ_ВЕБ1д, Designer",
 };
 
 const dummyUser3Data = {
   ...dummyUserData,
   _id: "user_3",
-  username: "alexa_james",
-  full_name: "Alexa james",
-  profile_picture:
-    "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=200&h=200&auto=format&fit=crop",
+  username: "katya_kapuza",
+  full_name: "Катя Капуза",
+  profile_picture: katya,
+  bio: "4 курс, ФМиИТ, 22ПM1д",
 };
 
 export const dummyStoriesData = [
