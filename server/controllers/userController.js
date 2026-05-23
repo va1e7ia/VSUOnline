@@ -1,6 +1,8 @@
 import User from "../models/User.js";
+import Connection from "../models/Connection.js";
 import fs from 'fs'
 import imagekit from "../configs/imageKit.js"
+import { connect } from "http2";
 
 //get userdata using userId
 export const getUserData = async (req, res) => {
@@ -22,14 +24,14 @@ export const getUserData = async (req, res) => {
 export const updateUserData = async (req, res) => {
   try {
     const { userId } = await req.auth();
-    const { username, bio, location, full_name } = req.body;
+    let { username, bio, location, full_name } = req.body;
 
     const tempUser = await User.findById(userId);
 
     !username && (username = tempUser.username);
 
     if (tempUser.username !== username) {
-      const user = User.findOne({ username });
+      const user = await User.findOne({ username });
       if (user) {
         //we will not change if already taken
         username = tempUser.username;
@@ -74,11 +76,11 @@ export const updateUserData = async (req, res) => {
 
       const url = imagekit.url({
         path: response.filePath,
-        transformation: {
+        transformation: [
           {quality: 'auto'},
           {format: 'webp'},
           {width: '1280'}
-        }
+        ]
       })
       updatedData.cover_photo = url;
     }
@@ -131,7 +133,7 @@ export const followUser = async (req, res) => {
 
     if(user.following.includes(id)){
       return res.json({success: false, message: 'u are already following this user'})
-    })
+    }
     user.following.push(id);
     await user.save();
 
@@ -172,3 +174,90 @@ export const unfollowUser = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+
+//send conn request
+export const sendConnectionRequest = async (req, res) => {
+  try {
+    const { userId } = req.auth();
+    const {id} = req.body;
+
+    //check if more than 20 req in last 24 hours
+    const last24Hours = new Date(Date.now() - 24*60*60*1000);
+    const connectionRequests = await Connection.find({from_user_id: userId, createdAt: {$gt: last24Hours}})
+    if(connectionRequests.length >= 20){
+      return res.json({success: false, message: 'Вы достигли лимита в 20 запросов на соединение за последние 24 часа. Пожалуйста, попробуйте позже.'})
+    }
+
+    //check if alrea connect
+    const connection = await Connection.findOne({
+      $or: [
+        {from_user_id: userId, to_user_id: id},
+        {from_user_id: id, to_user_id: userId}
+      ]
+    })
+
+    if(!connection){
+      await Connection.create({from_user_id: userId, to_user_id: id})
+      return res.json({success: true, message: 'Запрос на соединение отправлен'})
+    }else if(connection && connection.status === 'accepted'){
+      return res.json({success: false, message: 'Вы уже связаны с этим пользователем'})
+
+    }
+    return res.json({success: false, message: 'Запрос на соединение уже отправлен'})
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+}
+
+//get user connections
+export const getUserConnections = async (req, res) => {
+  try {
+    const { userId } = req.auth();
+    const user = await User.findById(userId).populate('connections followers following');
+
+    const connections = user.connections
+    const followers = user.followers
+    const following = user.following
+
+    const pendingConnections = (await Connection.find({to_user_id: userId, status: 'pending'})).populate('from_user_id').map(connection=> connection.from_user_id)
+
+    res.json({success: true, connections, followers, following, pendingConnections})
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+}
+
+//accept connection request
+export const acceptConnectionRequest = async (req, res) => {
+  try {
+    const { userId } = req.auth();
+    const {id} = req.body;
+
+    const connection = await Connection.findOne({from_user_id: id, to_user_id: userId})
+
+    if(!connection){
+      return res.json({success: false, message: 'Запрос на соединение не найден'})
+    }
+
+    const user = await User.findById(userId);
+    user.connections.push(id);
+
+    await user.save();
+
+    const toUser = await User.findById(id);
+    toUser.connections.push(userId);
+
+    await toUser.save();
+
+    connection.status = 'accepted';
+    await connection.save();
+
+    res.json({success: true, message: 'Запрос на соединение принят'}) 
+
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+}

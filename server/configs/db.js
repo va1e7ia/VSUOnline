@@ -5,7 +5,7 @@ const connectDB = async () => {
     mongoose.connection.on("connected", () =>
       console.log("database connected"),
     );
-    await mongoose.connect(`${process.env.MONGODB_URL}/vsuonline`);
+    await mongoose.connect(`${process.env.MONGODB_URL}`);
   } catch (error) {
     console.log(error.message);
   }
