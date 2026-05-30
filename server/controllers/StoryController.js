@@ -48,7 +48,7 @@ export const addUserStory = async (req, res) => {
 export const getStories = async (req, res) => {
     try {
         const {userId} = req.auth();
-        const user = User.findById(userId);
+        const user = await User.findById(userId);
 
         //user connections and following
         const userIds = [userId, ...user.connections, ...user.following]

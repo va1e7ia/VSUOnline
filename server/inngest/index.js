@@ -13,7 +13,13 @@ const syncUserCreation = inngest.createFunction(
     id: "sync-user-from-clerk",
     triggers: [{ event: "clerk/user.created" }], // ← triggers ВНУТРИ первого объекта
   },
+
+  
   async ({ event }) => {
+
+     console.log("USER CREATED EVENT");
+    console.log(event.data);
+
     const { id, first_name, last_name, email_addresses, image_url } =
       event.data;
     let username = email_addresses[0].email_address.split("@")[0];

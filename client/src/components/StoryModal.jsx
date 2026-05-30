@@ -1,6 +1,8 @@
 import { ArrowLeft, Sparkle, TextIcon, Upload } from "lucide-react";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
+import { useAuth } from "@clerk/clerk-react";
+import api from "../api/axios";
 
 const StoryModal = ({ setShowModal, fetchStories }) => {
   const bgColors = [
@@ -18,15 +20,80 @@ const StoryModal = ({ setShowModal, fetchStories }) => {
   const [media, setMedia] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
 
+  const {getToken} = useAuth();
+  const MAX_VIDEO_DURATION = 60; // Максимальная продолжительность видео в секундах
+  const MAX_VIDEO_SIZE_MB = 50; // Максимальный размер видео в байтах (50 МБ)
+
   const handleMediaUpload = (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      setMedia(file);
-      setPreviewUrl(URL.createObjectURL(file));
+      if(file.type.startsWith("video")){
+        if(file.size > MAX_VIDEO_SIZE_MB * 1024 * 1024){
+          toast.error(`Размер видео превышает ${MAX_VIDEO_SIZE_MB} МБ`);
+          setMedia(null);
+          setPreviewUrl(null);
+          return;
+        }
+        const video = document.createElement("video");
+
+        video.preload = "metadata";
+        video.onloadedmetadata = () => {
+          window.URL.revokeObjectURL(video.src);
+          if (video.duration > MAX_VIDEO_DURATION) {
+            toast.error(`Продолжительность видео превышает ${MAX_VIDEO_DURATION} секунд`);
+            setMedia(null);
+            setPreviewUrl(null);
+            return;
+          }else{
+             setMedia(file);
+            setPreviewUrl(URL.createObjectURL(file));
+            setText("");
+            setMode("media");
+          }
+        }
+         video.src = URL.createObjectURL(file);
+      }else if(file.type.startsWith("image")){
+        setMedia(file);
+        setPreviewUrl(URL.createObjectURL(file));
+        setText("");
+        setMode("media");
+      }
     }
   };
 
-  const handleCreateStory = async () => {};
+  const handleCreateStory = async () => {
+    const media_type = mode === 'media' ? media?.type.startsWith("image") ? "image" : "video" : "text";
+
+    if(media_type === "text" && !text){
+      throw new Error("Пожалуйста, введите текст для истории");
+    }
+
+    let formData = new FormData();
+    formData.append('content', text);
+    formData.append('media_type', media_type);
+    formData.append('media', media);
+    formData.append('background_color', background);
+
+    const token = await getToken();
+    try {
+      const {data} = await api.post('/api/story/create', formData, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (data.success) {
+        setShowModal(false);
+        toast.success('История добавлена');
+        fetchStories();
+      }else{
+        toast.error(data.message);
+      }
+    }catch(error){
+      toast.error(error.message);
+    }
+
+
+  };
 
   return (
     <div className="fixed inset-0 z-110 min-h-screen bg-black/80 background-blur text-white flex items-center justify-center p-4">
@@ -98,10 +165,7 @@ const StoryModal = ({ setShowModal, fetchStories }) => {
             }`}
           >
             <input
-              onChange={(e) => {
-                handleMediaUpload(e);
-                setMode("media");
-              }}
+              onChange={handleMediaUpload}
               type="file"
               accept="image/*, video/*"
               className="hidden"
@@ -114,8 +178,6 @@ const StoryModal = ({ setShowModal, fetchStories }) => {
           onClick={() =>
             toast.promise(handleCreateStory(), {
               loading: "Сохранение...",
-              success: <p>История добавлена</p>,
-              error: (e) => <p>{e.message}</p>,
             })
           }
           className="flex items-center justify-center gap-2 text-white py-3 mt-4 w-full rounded bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 transition cursor-pointer"
